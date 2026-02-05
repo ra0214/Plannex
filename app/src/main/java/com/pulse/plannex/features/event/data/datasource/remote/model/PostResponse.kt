@@ -7,4 +7,4 @@ data class PostDto(
     val nombre: String,
     @SerializedName("fecha")
     val fecha: String,
-    )
+)

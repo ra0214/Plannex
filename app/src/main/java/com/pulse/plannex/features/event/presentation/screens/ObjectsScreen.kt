@@ -1,30 +1,10 @@
 package com.pulse.plannex.features.event.presentation.screens
 
-package com.innovatech.jsonplaceholder.features.placerholder.presentation.screens
-
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,9 +12,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.innovatech.jsonplaceholder.features.placerholder.presentation.components.ObjectCard
-import com.innovatech.jsonplaceholder.features.placerholder.presentation.viewmodel.ObjectsViewModel
-import com.innovatech.jsonplaceholder.features.placerholder.presentation.viewmodel.ObjectsViewModelFactory
+import com.pulse.plannex.features.event.presentation.components.EventoCard
+import com.pulse.plannex.features.event.presentation.viewmodel.ObjectsViewModel
+import com.pulse.plannex.features.event.presentation.viewmodel.ObjectsViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,14 +24,14 @@ fun ObjectsScreen(
     val viewModel: ObjectsViewModel = viewModel(factory = factory)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    var title by remember { mutableStateOf("") }
-    var body by remember { mutableStateOf("") }
+    var nombre by remember { mutableStateOf("") }
+    var fecha by remember { mutableStateOf("") }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("JsonPlaceHolder", fontWeight = FontWeight.ExtraBold) }
+                title = { Text("Plannex Eventos", fontWeight = FontWeight.ExtraBold) }
             )
         }
     ) { innerPadding ->
@@ -60,7 +40,6 @@ fun ObjectsScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Formulario para crear nuevo Post
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -68,65 +47,61 @@ fun ObjectsScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Crear Nuevo Post",
+                    text = "Crear Nuevo Evento",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.align(Alignment.Start)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    label = { Text("Título") },
+                    value = nombre,
+                    onValueChange = { nombre = it },
+                    label = { Text("Nombre del Evento") },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
-                    value = body,
-                    onValueChange = { body = it },
-                    label = { Text("Cuerpo") },
+                    value = fecha,
+                    onValueChange = { fecha = it },
+                    label = { Text("Fecha (YYYY-MM-DD HH:MM:SS)") },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Button(
                     onClick = {
-                        viewModel.createNewPost(title, body)
-                        title = ""
-                        body = ""
+                        viewModel.createNewEvento(nombre, fecha)
+                        nombre = ""
+                        fecha = ""
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = title.isNotBlank() && body.isNotBlank() && !uiState.isLoading
+                    enabled = nombre.isNotBlank() && fecha.isNotBlank() && !uiState.isLoading
                 ) {
-                    Text("Publicar")
+                    Text("Publicar Evento")
                 }
             }
 
-            // Indicador de carga central solo si la lista está vacía
-            if (uiState.isLoading && uiState.objects.isEmpty()) {
+            if (uiState.isLoading && uiState.eventos.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             }
 
-            // Mensaje de error
             if (uiState.error != null) {
                 Text(
-                    text = uiState.error ?: "Error",
+                    text = uiState.error ?: "Error desconocido",
                     modifier = Modifier.padding(16.dp).align(Alignment.CenterHorizontally),
                     color = Color.Red
                 )
             }
 
-            // Lista de Posts
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(8.dp)
             ) {
-                items(uiState.objects) { post ->
-                    ObjectCard(
-                        id = post.id,
-                        userId = post.userId,
-                        title = post.title,
-                        body = post.body
+                items(uiState.eventos) { evento ->
+                    EventoCard(
+                        id = evento.id,
+                        nombre = evento.nombre,
+                        fecha = evento.fecha
                     )
                 }
             }
