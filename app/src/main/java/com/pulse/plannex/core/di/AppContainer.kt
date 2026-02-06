@@ -12,7 +12,7 @@ class AppContainer {
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
-    private val eventApi: EventApi by lazy {
+    val eventApi: EventApi by lazy {
         retrofit.create(EventApi::class.java)
     }
 

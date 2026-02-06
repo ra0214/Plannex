@@ -8,12 +8,37 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 
-// --- Modelos de Datos para Peticiones y Respuestas ---
+// --- Modelos de Datos ---
 
 data class EventoDto(
     @SerializedName("id") val id: Int? = null,
     @SerializedName("nombre") val nombre: String,
     @SerializedName("fecha") val fecha: String
+)
+
+data class EventosResponse(
+    @SerializedName("eventos") val eventos: List<EventoDto>?
+)
+
+data class MessageResponse(
+    @SerializedName("message") val message: String
+)
+
+data class LoginRequest(
+    @SerializedName("userName") val userName: String,
+    @SerializedName("password") val password: String
+)
+
+data class LoginResponse(
+    @SerializedName("status") val status: String,
+    @SerializedName("message") val message: String?,
+    @SerializedName("token") val token: String? = null
+)
+
+data class RegisterRequest(
+    @SerializedName("userName") val userName: String,
+    @SerializedName("email") val email: String,
+    @SerializedName("password") val password: String
 )
 
 data class InviteRequest(
@@ -25,28 +50,18 @@ data class AsistenciaRequest(
     @SerializedName("estado") val estado: String
 )
 
-// Objeto que envuelve la lista de eventos (para GET /eventos)
-data class EventosResponse(
-    // Making the list nullable to handle cases where the API returns null
-    @SerializedName("eventos")
-    val eventos: List<EventoDto>?
-)
-
-// Objeto para el mensaje de éxito (para POST /eventos)
-data class MessageResponse(
-    @SerializedName("message")
-    val message: String
-)
-
-// --- Interfaz de la API ---
-
 interface EventApi {
+    @POST("login")
+    suspend fun login(@Body request: LoginRequest): LoginResponse
 
-    @POST("eventos")
-    suspend fun createEvento(@Body evento: EventoDto): MessageResponse
+    @POST("user")
+    suspend fun register(@Body request: RegisterRequest): MessageResponse
 
     @GET("eventos")
     suspend fun getEventos(): EventosResponse
+
+    @POST("eventos")
+    suspend fun createEvento(@Body evento: EventoDto): MessageResponse
 
     @GET("eventos/{id}")
     suspend fun getEvento(@Path("id") id: Int): EventoDto
