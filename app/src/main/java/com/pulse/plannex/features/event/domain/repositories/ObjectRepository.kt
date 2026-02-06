@@ -6,6 +6,7 @@ interface ObjectRepository {
     suspend fun getEventos(): List<Evento>
     suspend fun createEvento(nombre: String, fecha: String): Evento
     suspend fun getEvento(id: Int): Evento
-    suspend fun updateEvento(id: Int, nombre: String, fecha: String): Evento
+    // Cambiado para que no devuelva nada, ya que la API no devuelve el objeto actualizado
+    suspend fun updateEvento(id: Int, nombre: String, fecha: String)
     suspend fun deleteEvento(id: Int)
 }

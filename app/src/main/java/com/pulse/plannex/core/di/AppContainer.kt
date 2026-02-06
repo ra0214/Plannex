@@ -8,7 +8,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 class AppContainer {
     private val retrofit: Retrofit = Retrofit.Builder()
-        .baseUrl("http://10.0.2.2:8080/") // IP para acceder al localhost desde el emulador de Android
+        .baseUrl("http://3.217.184.205:8080/") // IP para acceder al localhost desde el emulador de Android
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
