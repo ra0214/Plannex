@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -23,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pulse.plannex.features.event.domain.entities.Evento
@@ -43,7 +45,6 @@ fun ObjectsScreen(
         contentPadding = PaddingValues(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // --- Formulario para Crear o Editar Evento ---
         item {
             val formTitle = if (uiState.editingEventId == null) "Crear Nuevo Evento" else "Editando Evento"
             Text(formTitle, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
@@ -66,23 +67,24 @@ fun ObjectsScreen(
             
             Row(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
-                    value = uiState.eventLat?.toString() ?: "",
-                    onValueChange = { viewModel.onEventLocationChanged(it.toDoubleOrNull(), uiState.eventLng) },
+                    value = uiState.eventLat,
+                    onValueChange = { viewModel.onEventLocationChanged(it, uiState.eventLng) },
                     label = { Text("Latitud") },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 OutlinedTextField(
-                    value = uiState.eventLng?.toString() ?: "",
-                    onValueChange = { viewModel.onEventLocationChanged(uiState.eventLat, it.toDoubleOrNull()) },
+                    value = uiState.eventLng,
+                    onValueChange = { viewModel.onEventLocationChanged(uiState.eventLat, it) },
                     label = { Text("Longitud") },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
             }
             
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Botones de acción del formulario
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Button(
                     onClick = { viewModel.submitEvento() },
@@ -106,7 +108,6 @@ fun ObjectsScreen(
             Spacer(modifier = Modifier.height(8.dp))
         }
 
-        // --- Manejo de estados para la lista ---
         if (uiState.isLoading && uiState.eventos.isEmpty()) {
             item { Box(modifier = Modifier.fillParentMaxSize().padding(top=32.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() } }
         } else if (uiState.error != null) {
@@ -185,7 +186,6 @@ fun EventCard(evento: Evento, onEdit: () -> Unit, onDelete: () -> Unit, onViewLo
                     }
                 }
 
-                // Botones de Acción (SIN ICONOS)
                 Column(horizontalAlignment = Alignment.End, modifier = Modifier.padding(end = 8.dp)) {
                     TextButton(onClick = onEdit) {
                         Text("Editar")

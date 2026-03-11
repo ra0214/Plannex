@@ -1,9 +1,9 @@
 package com.pulse.plannex.features.location.presentation.screens
 
-import com.pulse.plannex.features.location.domain.entities.LocationObject
+import com.pulse.plannex.features.location.domain.entities.LocationStatus
 
 data class LocationUiState(
-    val locationStatus: LocationObject? = null,
+    val locationStatus: LocationStatus? = null,
     val isLoading: Boolean = false,
     val error: String? = null,
     val eventName: String = "",

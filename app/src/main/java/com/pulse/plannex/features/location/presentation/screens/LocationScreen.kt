@@ -49,7 +49,7 @@ fun LocationScreen(
 
         uiState.locationStatus?.let { status ->
             LocationCard(
-                label = "Tu Ubicación Actual (Hardware 3)",
+                label = "Tu Ubicación Actual",
                 value = String.format(Locale.getDefault(), "%.4f, %.4f", status.latitude, status.longitude)
             )
 

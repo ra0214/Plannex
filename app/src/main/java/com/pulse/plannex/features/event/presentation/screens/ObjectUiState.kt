@@ -9,8 +9,7 @@ data class ObjectsUiState (
     val isRefreshing: Boolean = false,
     val eventName: String = "",
     val eventDate: String = "",
-    val eventLat: Double? = null,
-    val eventLng: Double? = null,
-    // Nuevo: ID del evento que estamos editando. Si es null, estamos creando uno nuevo.
+    val eventLat: String = "",
+    val eventLng: String = "",
     val editingEventId: Int? = null
 )

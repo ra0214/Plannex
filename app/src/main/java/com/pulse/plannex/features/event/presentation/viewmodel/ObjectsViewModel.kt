@@ -45,20 +45,23 @@ class ObjectsViewModel(
         _uiState.update { it.copy(eventDate = date, error = null) }
     }
 
-    fun onEventLocationChanged(lat: Double?, lng: Double?) {
+    fun onEventLocationChanged(lat: String, lng: String) {
         _uiState.update { it.copy(eventLat = lat, eventLng = lng) }
     }
 
     fun submitEvento() {
         val name = _uiState.value.eventName
         val date = _uiState.value.eventDate
-        val lat = _uiState.value.eventLat
-        val lng = _uiState.value.eventLng
+        val latStr = _uiState.value.eventLat
+        val lngStr = _uiState.value.eventLng
 
         if (name.isBlank() || date.isBlank()) {
             _uiState.update { it.copy(error = "El nombre y la fecha son obligatorios.") }
             return
         }
+
+        val lat = latStr.toDoubleOrNull()
+        val lng = lngStr.toDoubleOrNull()
 
         _uiState.update { it.copy(isLoading = true, error = null) }
 
@@ -72,7 +75,7 @@ class ObjectsViewModel(
 
             result.fold(
                 onSuccess = {
-                    cancelEdit() // Limpia el formulario y sale del modo edición
+                    cancelEdit() 
                     loadEventos()
                 },
                 onFailure = { error ->
@@ -99,8 +102,8 @@ class ObjectsViewModel(
                 editingEventId = evento.id,
                 eventName = evento.nombre,
                 eventDate = evento.fecha,
-                eventLat = evento.latitud,
-                eventLng = evento.longitud
+                eventLat = evento.latitud?.toString() ?: "",
+                eventLng = evento.longitud?.toString() ?: ""
             )
         }
     }
@@ -111,8 +114,8 @@ class ObjectsViewModel(
                 editingEventId = null,
                 eventName = "",
                 eventDate = "",
-                eventLat = null,
-                eventLng = null
+                eventLat = "",
+                eventLng = ""
             )
         }
     }
