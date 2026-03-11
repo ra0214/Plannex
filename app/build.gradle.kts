@@ -5,9 +5,7 @@ plugins {
 
 android {
     namespace = "com.pulse.plannex"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.pulse.plannex"
@@ -48,11 +46,15 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui.text.google.fonts)
     implementation(libs.androidx.material3)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)   //viewModel()
-    implementation(libs.com.squareup.retrofit2.retrofit)        // Retrofit
-    implementation(libs.com.squareup.retrofit2.converter.json)  // JSON
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.com.squareup.retrofit2.retrofit)
+    implementation(libs.com.squareup.retrofit2.converter.json)
     implementation(libs.io.coil.kt.coil.compose)
-    implementation(libs.androidx.ui)                // IO
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.biometric)
+    implementation(libs.androidx.fragment.ktx)
+    implementation(libs.androidx.compose.material.icons.extended)
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

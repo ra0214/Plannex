@@ -1,9 +1,11 @@
 package com.pulse.plannex.features.auth.presentation.viewmodel
 
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pulse.plannex.core.network.EventApi
 import com.pulse.plannex.core.network.LoginRequest
+import com.pulse.plannex.features.auth.domain.BiometricAuthenticator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,11 +15,15 @@ import kotlinx.coroutines.launch
 data class LoginUiState(
     val isLoading: Boolean = false,
     val isSuccess: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val isBiometricAvailable: Boolean = false
 )
 
-class LoginViewModel(private val api: EventApi) : ViewModel() {
-    private val _uiState = MutableStateFlow(LoginUiState())
+class LoginViewModel(
+    private val api: EventApi,
+    private val biometricAuthenticator: BiometricAuthenticator
+) : ViewModel() {
+    private val _uiState = MutableStateFlow(LoginUiState(isBiometricAvailable = biometricAuthenticator.isBiometricAvailable()))
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
     fun login(userName: String, password: String) {
@@ -25,9 +31,7 @@ class LoginViewModel(private val api: EventApi) : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = api.login(LoginRequest(userName, password))
-                
-                // Flexibilidad: Consideramos éxito si el status es success, 
-                // o si el mensaje dice "exitoso", o si nos llega un token.
+
                 val isSuccessful = response.status.equals("success", ignoreCase = true) || 
                                   response.message?.contains("exitoso", ignoreCase = true) == true ||
                                   response.token != null
@@ -38,8 +42,23 @@ class LoginViewModel(private val api: EventApi) : ViewModel() {
                     _uiState.update { it.copy(isLoading = false, error = response.message ?: "Credenciales incorrectas") }
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = "Error de conexión: ${e.localizedMessage}") }
+                _uiState.update { it.copy(isLoading = false, error = "Error de conexión") }
             }
         }
+    }
+
+    fun loginWithBiometrics(activity: FragmentActivity) {
+        biometricAuthenticator.authenticate(
+            activity = activity,
+            onSuccess = {
+                _uiState.update { it.copy(isSuccess = true) }
+            },
+            onError = { error ->
+                _uiState.update { it.copy(error = error) }
+            },
+            onFailed = {
+                _uiState.update { it.copy(error = "Autenticación fallida") }
+            }
+        )
     }
 }

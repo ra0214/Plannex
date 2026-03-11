@@ -25,14 +25,13 @@ class RegisterViewModel(private val api: EventApi) : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = api.register(RegisterRequest(userName, email, password))
-                // Suponiendo que una respuesta exitosa contiene un mensaje claro.
                 if (response.message.contains("registrado", ignoreCase = true)) {
                     _uiState.update { it.copy(isLoading = false, isSuccess = true) }
                 } else {
                     _uiState.update { it.copy(isLoading = false, error = response.message) }
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = "Error de registro: ${e.localizedMessage}") }
+                _uiState.update { it.copy(isLoading = false, error = "Error de registro") }
             }
         }
     }
