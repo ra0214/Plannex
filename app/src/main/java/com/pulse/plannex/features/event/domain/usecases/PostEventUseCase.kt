@@ -8,12 +8,12 @@ class PostEventUseCase(private val repository: ObjectRepository) {
         repository.getEventos()
     }
 
-    suspend fun createEvento(nombre: String, fecha: String): Result<Evento> = runCatching {
-        repository.createEvento(nombre, fecha)
+    suspend fun createEvento(nombre: String, fecha: String, latitud: Double? = null, longitud: Double? = null): Result<Evento> = runCatching {
+        repository.createEvento(nombre, fecha, latitud, longitud)
     }
 
-    suspend fun updateEvento(id: Int, nombre: String, fecha: String): Result<Unit> = runCatching {
-        repository.updateEvento(id, nombre, fecha)
+    suspend fun updateEvento(id: Int, nombre: String, fecha: String, latitud: Double? = null, longitud: Double? = null): Result<Unit> = runCatching {
+        repository.updateEvento(id, nombre, fecha, latitud, longitud)
     }
 
     suspend fun deleteEvento(id: Int): Result<Unit> = runCatching {

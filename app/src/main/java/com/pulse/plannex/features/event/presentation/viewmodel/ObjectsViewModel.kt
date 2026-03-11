@@ -45,9 +45,15 @@ class ObjectsViewModel(
         _uiState.update { it.copy(eventDate = date, error = null) }
     }
 
+    fun onEventLocationChanged(lat: Double?, lng: Double?) {
+        _uiState.update { it.copy(eventLat = lat, eventLng = lng) }
+    }
+
     fun submitEvento() {
         val name = _uiState.value.eventName
         val date = _uiState.value.eventDate
+        val lat = _uiState.value.eventLat
+        val lng = _uiState.value.eventLng
 
         if (name.isBlank() || date.isBlank()) {
             _uiState.update { it.copy(error = "El nombre y la fecha son obligatorios.") }
@@ -59,9 +65,9 @@ class ObjectsViewModel(
         viewModelScope.launch {
             val isEditing = _uiState.value.editingEventId != null
             val result = if (isEditing) {
-                useCase.updateEvento(_uiState.value.editingEventId!!, name, date)
+                useCase.updateEvento(_uiState.value.editingEventId!!, name, date, lat, lng)
             } else {
-                useCase.createEvento(name, date)
+                useCase.createEvento(name, date, lat, lng)
             }
 
             result.fold(
@@ -92,7 +98,9 @@ class ObjectsViewModel(
             it.copy(
                 editingEventId = evento.id,
                 eventName = evento.nombre,
-                eventDate = evento.fecha
+                eventDate = evento.fecha,
+                eventLat = evento.latitud,
+                eventLng = evento.longitud
             )
         }
     }
@@ -102,7 +110,9 @@ class ObjectsViewModel(
             it.copy(
                 editingEventId = null,
                 eventName = "",
-                eventDate = ""
+                eventDate = "",
+                eventLat = null,
+                eventLng = null
             )
         }
     }

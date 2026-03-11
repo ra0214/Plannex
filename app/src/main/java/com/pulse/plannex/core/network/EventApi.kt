@@ -13,7 +13,9 @@ import retrofit2.http.Path
 data class EventoDto(
     @SerializedName("id") val id: Int? = null,
     @SerializedName("nombre") val nombre: String,
-    @SerializedName("fecha") val fecha: String
+    @SerializedName("fecha") val fecha: String,
+    @SerializedName("latitud") val latitud: Double? = null,
+    @SerializedName("longitud") val longitud: Double? = null
 )
 
 data class InviteRequest(

@@ -3,6 +3,8 @@ package com.pulse.plannex.core.di
 import com.pulse.plannex.core.network.EventApi
 import com.pulse.plannex.features.event.data.repositories.ObjectsRepositoryImlp
 import com.pulse.plannex.features.event.domain.repositories.ObjectRepository
+import com.pulse.plannex.features.location.data.repositories.LocationRepositoryImpl
+import com.pulse.plannex.features.location.domain.repositories.LocationRepository
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -18,5 +20,9 @@ class AppContainer {
 
     val objectRepository: ObjectRepository by lazy {
         ObjectsRepositoryImlp(eventApi)
+    }
+
+    val locationRepository: LocationRepository by lazy {
+        LocationRepositoryImpl()
     }
 }
