@@ -10,24 +10,22 @@ class ObjectsRepositoryImlp(
     private val api: EventApi
 ) : ObjectRepository {
     override suspend fun getEventos(): List<Evento> {
-        // Handle the case where the API might return a null list of events
         val eventosDto = api.getEventos().eventos
         return eventosDto?.map { it.toDomain() } ?: emptyList()
     }
 
-    override suspend fun createEvento(nombre: String, fecha: String): Evento {
-        val dto = EventoDto(nombre = nombre, fecha = fecha)
+    override suspend fun createEvento(nombre: String, fecha: String, latitud: Double?, longitud: Double?): Evento {
+        val dto = EventoDto(nombre = nombre, fecha = fecha, latitud = latitud, longitud = longitud)
         api.createEvento(dto) 
-        // Return a temporary object since the API doesn't return the created one
-        return Evento(id = -1, nombre = nombre, fecha = fecha)
+        return Evento(id = -1, nombre = nombre, fecha = fecha, latitud = latitud, longitud = longitud)
     }
 
     override suspend fun getEvento(id: Int): Evento {
         return api.getEvento(id).toDomain()
     }
 
-    override suspend fun updateEvento(id: Int, nombre: String, fecha: String) {
-        val dto = EventoDto(id = id, nombre = nombre, fecha = fecha)
+    override suspend fun updateEvento(id: Int, nombre: String, fecha: String, latitud: Double?, longitud: Double?) {
+        val dto = EventoDto(id = id, nombre = nombre, fecha = fecha, latitud = latitud, longitud = longitud)
         api.updateEvento(id, dto)
     }
 
