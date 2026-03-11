@@ -7,7 +7,9 @@ fun EventoDto.toDomain(): Evento {
     return Evento(
         id = this.id,
         nombre = this.nombre,
-        fecha = this.fecha
+        fecha = this.fecha,
+        latitud = this.latitud,
+        longitud = this.longitud
     )
 }
 
@@ -15,6 +17,8 @@ fun Evento.toDto(): EventoDto {
     return EventoDto(
         id = this.id,
         nombre = this.nombre,
-        fecha = this.fecha
+        fecha = this.fecha,
+        latitud = this.latitud,
+        longitud = this.longitud
     )
 }

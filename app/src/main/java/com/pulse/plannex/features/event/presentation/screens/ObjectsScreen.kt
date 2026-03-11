@@ -31,7 +31,10 @@ import com.pulse.plannex.features.event.presentation.viewmodel.ObjectsViewModelF
 import java.util.UUID
 
 @Composable
-fun ObjectsScreen(factory: ObjectsViewModelFactory) {
+fun ObjectsScreen(
+    factory: ObjectsViewModelFactory,
+    onNavigateToLocation: (Evento) -> Unit = {}
+) {
     val viewModel: ObjectsViewModel = viewModel(factory = factory)
     val uiState by viewModel.uiState.collectAsState()
 
@@ -59,6 +62,24 @@ fun ObjectsScreen(factory: ObjectsViewModelFactory) {
                 label = { Text("Fecha (YYYY-MM-DD HH:MM:SS)") },
                 modifier = Modifier.fillMaxWidth()
             )
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Row(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = uiState.eventLat?.toString() ?: "",
+                    onValueChange = { viewModel.onEventLocationChanged(it.toDoubleOrNull(), uiState.eventLng) },
+                    label = { Text("Latitud") },
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                OutlinedTextField(
+                    value = uiState.eventLng?.toString() ?: "",
+                    onValueChange = { viewModel.onEventLocationChanged(uiState.eventLat, it.toDoubleOrNull()) },
+                    label = { Text("Longitud") },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            
             Spacer(modifier = Modifier.height(16.dp))
 
             // Botones de acción del formulario
@@ -97,7 +118,8 @@ fun ObjectsScreen(factory: ObjectsViewModelFactory) {
                 EventCard(
                     evento = evento,
                     onEdit = { viewModel.startEdit(evento) },
-                    onDelete = { evento.id?.let { nonNullId -> viewModel.deleteEvento(nonNullId) } } // <-- SOLUCIÓN AQUÍ
+                    onDelete = { evento.id?.let { nonNullId -> viewModel.deleteEvento(nonNullId) } },
+                    onViewLocation = { onNavigateToLocation(evento) }
                 )
             }
         }
@@ -105,7 +127,7 @@ fun ObjectsScreen(factory: ObjectsViewModelFactory) {
 }
 
 @Composable
-fun EventCard(evento: Evento, onEdit: () -> Unit, onDelete: () -> Unit) {
+fun EventCard(evento: Evento, onEdit: () -> Unit, onDelete: () -> Unit, onViewLocation: () -> Unit) {
     val dateParts = evento.fecha.split(" ").getOrNull(0)?.split("-")
     val timePart = evento.fecha.split(" ").getOrNull(1)?.substring(0, 5)
 
@@ -134,41 +156,60 @@ fun EventCard(evento: Evento, onEdit: () -> Unit, onDelete: () -> Unit) {
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp))
-                    .background(MaterialTheme.colorScheme.primary)
-                    .padding(horizontal = 20.dp, vertical = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = day, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.ExtraBold, color = Color.White)
-                Text(text = monthName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White)
-            }
+                Column(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(topStart = 12.dp, bottomStart = 0.dp))
+                        .background(MaterialTheme.colorScheme.primary)
+                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(text = day, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.ExtraBold, color = Color.White)
+                    Text(text = monthName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White)
+                }
 
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 16.dp)
-            ) {
-                Text(text = evento.nombre, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(4.dp))
-                if (timePart != null) {
-                    Text(text = "A las $timePart hs", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 16.dp)
+                ) {
+                    Text(text = evento.nombre, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    if (timePart != null) {
+                        Text(text = "A las $timePart hs", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+
+                // Botones de Acción (SIN ICONOS)
+                Column(horizontalAlignment = Alignment.End, modifier = Modifier.padding(end = 8.dp)) {
+                    TextButton(onClick = onEdit) {
+                        Text("Editar")
+                    }
+                    TextButton(onClick = onDelete) {
+                        Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                    }
                 }
             }
-
-            // Botones de Acción (SIN ICONOS)
-            Column(horizontalAlignment = Alignment.End, modifier = Modifier.padding(end = 8.dp)) {
-                TextButton(onClick = onEdit) {
-                    Text("Editar")
-                }
-                TextButton(onClick = onDelete) {
-                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
+            
+            if (evento.latitud != null && evento.longitud != null) {
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Button(
+                        onClick = onViewLocation,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("📍 Rastrear Llegada")
+                    }
                 }
             }
         }
