@@ -1,82 +1,65 @@
 package com.pulse.plannex.core.network
 
 import com.google.gson.annotations.SerializedName
+import okhttp3.ResponseBody
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Headers
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
-
-// --- Modelos de Datos ---
+import retrofit2.http.Query
 
 data class EventoDto(
     @SerializedName("id") val id: Int? = null,
-    @SerializedName("nombre") val nombre: String,
-    @SerializedName("fecha") val fecha: String,
-    @SerializedName("latitud") val latitud: Double? = null,
-    @SerializedName("longitud") val longitud: Double? = null
+    @SerializedName("title") val title: String? = null,
+    @SerializedName("description") val description: String? = null,
+    @SerializedName("date") val date: String? = null,
+    @SerializedName("latitude") val latitude: Double? = null,
+    @SerializedName("longitude") val longitude: Double? = null,
+    @SerializedName("qr_code_data") val qrCodeData: String? = null,
+    @SerializedName("created_by") val createdBy: Int? = null
 )
 
 data class EventosResponse(
-    @SerializedName("eventos") val eventos: List<EventoDto>?
-)
-
-data class MessageResponse(
-    @SerializedName("message") val message: String
-)
-
-data class LoginRequest(
-    @SerializedName("userName") val userName: String,
-    @SerializedName("password") val password: String
-)
-
-data class LoginResponse(
-    @SerializedName("status") val status: String,
-    @SerializedName("message") val message: String?,
-    @SerializedName("token") val token: String? = null
-)
-
-data class RegisterRequest(
-    @SerializedName("userName") val userName: String,
-    @SerializedName("email") val email: String,
-    @SerializedName("password") val password: String
-)
-
-data class InviteRequest(
-    @SerializedName("user_id") val userId: Int
-)
-
-data class AsistenciaRequest(
-    @SerializedName("user_id") val userId: Int,
-    @SerializedName("estado") val estado: String
+    @SerializedName("eventos") val eventos: List<EventoDto>? = null
 )
 
 interface EventApi {
-    @POST("login")
-    suspend fun login(@Body request: LoginRequest): LoginResponse
-
-    @POST("user")
-    suspend fun register(@Body request: RegisterRequest): MessageResponse
-
+    @Headers("Accept: application/json")
     @GET("eventos")
-    suspend fun getEventos(): EventosResponse
+    suspend fun getEventos(
+        @Query("created_by") createdBy: Int? = null
+    ): Response<EventosResponse>
 
+    @Headers("Content-Type: application/json", "Accept: application/json")
     @POST("eventos")
-    suspend fun createEvento(@Body evento: EventoDto): MessageResponse
+    suspend fun createEvento(@Body evento: EventoDto): Response<ResponseBody>
 
     @GET("eventos/{id}")
     suspend fun getEvento(@Path("id") id: Int): EventoDto
 
     @PUT("eventos/{id}")
-    suspend fun updateEvento(@Path("id") id: Int, @Body evento: EventoDto): EventoDto
+    suspend fun updateEvento(@Path("id") id: Int, @Body evento: EventoDto): Response<ResponseBody>
 
     @DELETE("eventos/{id}")
-    suspend fun deleteEvento(@Path("id") id: Int)
+    suspend fun deleteEvento(@Path("id") id: Int): Response<ResponseBody>
 
-    @POST("eventos/{id}/invitar")
-    suspend fun invitar(@Path("id") id: Int, @Body inviteRequest: InviteRequest)
+    @Headers("Content-Type: application/json", "Accept: application/json")
+    @POST("login")
+    suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
 
-    @PUT("eventos/{id}/asistencia")
-    suspend fun updateAsistencia(@Path("id") id: Int, @Body asistenciaRequest: AsistenciaRequest)
+    @POST("user")
+    suspend fun register(@Body request: RegisterRequest): Response<ResponseBody>
 }
+
+data class LoginRequest(val userName: String, val password: String)
+data class LoginResponse(val status: String, val message: String?, val token: String? = null)
+
+data class RegisterRequest(
+    val userName: String,
+    val email: String,
+    val password: String
+)

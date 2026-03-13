@@ -10,13 +10,23 @@ class ObjectsRepositoryImlp(
     private val api: EventApi
 ) : ObjectRepository {
     override suspend fun getEventos(): List<Evento> {
-        val eventosDto = api.getEventos().eventos
-        return eventosDto?.map { it.toDomain() } ?: emptyList()
+        val response = api.getEventos(createdBy = 1)
+        return if (response.isSuccessful) {
+            response.body()?.eventos?.map { it.toDomain() } ?: emptyList()
+        } else {
+            emptyList()
+        }
     }
 
     override suspend fun createEvento(nombre: String, fecha: String, latitud: Double?, longitud: Double?): Evento {
-        val dto = EventoDto(nombre = nombre, fecha = fecha, latitud = latitud, longitud = longitud)
-        api.createEvento(dto) 
+        val dto = EventoDto(
+            title = nombre,
+            date = fecha,
+            latitude = latitud,
+            longitude = longitud,
+            createdBy = 1
+        )
+        api.createEvento(dto)
         return Evento(id = -1, nombre = nombre, fecha = fecha, latitud = latitud, longitud = longitud)
     }
 
@@ -25,7 +35,14 @@ class ObjectsRepositoryImlp(
     }
 
     override suspend fun updateEvento(id: Int, nombre: String, fecha: String, latitud: Double?, longitud: Double?) {
-        val dto = EventoDto(id = id, nombre = nombre, fecha = fecha, latitud = latitud, longitud = longitud)
+        val dto = EventoDto(
+            id = id,
+            title = nombre,
+            date = fecha,
+            latitude = latitud,
+            longitude = longitud,
+            createdBy = 1
+        )
         api.updateEvento(id, dto)
     }
 

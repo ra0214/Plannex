@@ -5,6 +5,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,12 +18,14 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.fragment.app.FragmentActivity
 import com.pulse.plannex.features.auth.presentation.viewmodel.LoginViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel,
+    activity: FragmentActivity,
     onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
@@ -111,6 +115,21 @@ fun LoginScreen(
                     }
                 }
 
+                if (uiState.isBiometricAvailable) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    IconButton(
+                        onClick = { viewModel.loginWithBiometrics(activity) },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Fingerprint,
+                            contentDescription = "Autenticación biométrica",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(40.dp)
+                        )
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
 
                 TextButton(onClick = onNavigateToRegister) {
@@ -129,7 +148,7 @@ fun LoginScreen(
                         )
                     }
                 }
-                
+
                 if (uiState.isSuccess) {
                     Text("Login exitoso", color = MaterialTheme.colorScheme.primary)
                 }
