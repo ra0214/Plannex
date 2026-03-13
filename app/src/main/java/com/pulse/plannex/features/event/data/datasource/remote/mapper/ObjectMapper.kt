@@ -6,19 +6,19 @@ import com.pulse.plannex.features.event.domain.entities.Evento
 fun EventoDto.toDomain(): Evento {
     return Evento(
         id = this.id,
-        nombre = this.title,
-        fecha = this.date,
-        latitud = this.latitude,
-        longitud = this.longitude
+        nombre = this.nombre,
+        fecha = this.fecha,
+        latitud = this.latitud,
+        longitud = this.longitud
     )
 }
 
 fun Evento.toDto(): EventoDto {
     return EventoDto(
         id = this.id,
-        title = this.nombre,
-        date = this.fecha,
-        latitude = this.latitud,
-        longitude = this.longitud
+        nombre = this.nombre,
+        fecha = this.fecha,
+        latitud = this.latitud,
+        longitud = this.longitud
     )
 }

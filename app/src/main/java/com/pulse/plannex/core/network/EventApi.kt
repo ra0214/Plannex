@@ -12,13 +12,10 @@ import retrofit2.http.Path
 
 data class EventoDto(
     @SerializedName("id") val id: Int? = null,
-    @SerializedName("title") val title: String,
-    @SerializedName("description") val description: String? = null,
-    @SerializedName("date") val date: String,
-    @SerializedName("latitude") val latitude: Double? = null,
-    @SerializedName("longitude") val longitude: Double? = null,
-    @SerializedName("qr_code_data") val qrCodeData: String? = null,
-    @SerializedName("created_by") val createdBy: Int? = null
+    @SerializedName("nombre") val nombre: String,
+    @SerializedName("fecha") val fecha: String,
+    @SerializedName("latitud") val latitud: Double? = null,
+    @SerializedName("longitud") val longitud: Double? = null
 )
 
 data class EventosResponse(
@@ -56,6 +53,12 @@ data class AsistenciaRequest(
 )
 
 interface EventApi {
+    @POST("login")
+    suspend fun login(@Body request: LoginRequest): LoginResponse
+
+    @POST("user")
+    suspend fun register(@Body request: RegisterRequest): MessageResponse
+
     @GET("eventos")
     suspend fun getEventos(): EventosResponse
 
@@ -70,12 +73,6 @@ interface EventApi {
 
     @DELETE("eventos/{id}")
     suspend fun deleteEvento(@Path("id") id: Int)
-
-    @POST("login")
-    suspend fun login(@Body request: LoginRequest): LoginResponse
-
-    @POST("user")
-    suspend fun register(@Body request: RegisterRequest): MessageResponse
 
     @POST("eventos/{id}/invitar")
     suspend fun invitar(@Path("id") id: Int, @Body inviteRequest: InviteRequest)

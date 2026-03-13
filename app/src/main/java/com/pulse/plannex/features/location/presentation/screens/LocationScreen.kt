@@ -1,20 +1,13 @@
 package com.pulse.plannex.features.location.presentation.screens
 
-import android.Manifest
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.*
 import com.pulse.plannex.features.location.presentation.components.LocationCard
 import com.pulse.plannex.features.location.presentation.viewmodel.LocationViewModel
 import java.util.Locale
@@ -27,90 +20,74 @@ fun LocationScreen(
     viewModel: LocationViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    
-    val eventLocation = LatLng(eventLat, eventLng)
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(eventLocation, 15f)
+
+    LaunchedEffect(key1 = eventName) {
+        viewModel.setEventData(eventName, eventLat, eventLng)
     }
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-        ) {
-            viewModel.setEventData(eventName, eventLat, eventLng)
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        permissionLauncher.launch(
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "📍 Ubicación del Evento",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold
         )
-    }
+        
+        Spacer(modifier = Modifier.height(24.dp))
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        Box(modifier = Modifier.weight(1f)) {
-            GoogleMap(
-                modifier = Modifier.fillMaxSize(),
-                cameraPositionState = cameraPositionState,
-                properties = MapProperties(isMyLocationEnabled = uiState.locationStatus != null),
-                uiSettings = MapUiSettings(myLocationButtonEnabled = true)
-            ) {
-                Marker(
-                    state = MarkerState(position = eventLocation),
-                    title = eventName,
-                    snippet = "Destino del evento"
+        LocationCard(
+            label = "Nombre del Evento",
+            value = uiState.eventName,
+            subValue = "Destino: ${String.format(Locale.getDefault(), "%.4f, %.4f", uiState.eventLat, uiState.eventLng)}"
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        uiState.locationStatus?.let { status ->
+            LocationCard(
+                label = "Tu Ubicación Actual (Hardware 3)",
+                value = String.format(Locale.getDefault(), "%.4f, %.4f", status.latitude, status.longitude)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            status.distanceToEvent?.let { distance ->
+                val distanceValue = if (distance > 1000) {
+                    String.format(Locale.getDefault(), "%.2f km", distance / 1000)
+                } else {
+                    "${distance.toInt()} metros"
+                }
+
+                LocationCard(
+                    label = "Distancia al Sitio",
+                    value = distanceValue,
+                    backgroundColor = MaterialTheme.colorScheme.primaryContainer
                 )
             }
-        }
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "📍 $eventName",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                uiState.locationStatus?.let { status ->
-                    val distance = status.distanceToEvent
-                    val distanceText = if (distance != null) {
-                        if (distance > 1000) {
-                            String.format(Locale.getDefault(), "%.2f km", distance / 1000)
-                        } else {
-                            "${distance.toInt()} metros"
-                        }
-                    } else "Calculando..."
-
-                    LocationCard(
-                        label = "Distancia actual",
-                        value = distanceText,
-                        backgroundColor = if (status.hasArrived) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primaryContainer
-                    )
-
-                    if (status.hasArrived) {
+            if (status.hasArrived) {
+                Spacer(modifier = Modifier.height(32.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF4CAF50)),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+                ) {
+                    Box(
+                        modifier = Modifier.padding(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Text(
-                            text = "¡Has llegado al sitio!",
-                            color = Color(0xFF2E7D32),
-                            fontWeight = FontWeight.ExtraBold,
-                            modifier = Modifier.padding(top = 8.dp)
+                            text = "✅ ¡HAS LLEGADO AL SITIO!",
+                            color = Color.White,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.ExtraBold
                         )
                     }
-                } ?: Text("Esperando señal de GPS...")
+                }
             }
         }
     }

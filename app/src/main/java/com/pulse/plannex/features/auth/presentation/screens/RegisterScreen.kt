@@ -142,7 +142,7 @@ fun RegisterScreen(
                         )
                     }
                 }
-                
+
                 AnimatedVisibility(visible = uiState.isSuccess) {
                     Text(
                         text = "¡Registro exitoso!",
