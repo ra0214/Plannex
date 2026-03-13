@@ -1,31 +1,46 @@
 package com.pulse.plannex.features.location.data.repositories
 
-import android.location.Location
-import com.pulse.plannex.features.location.domain.entities.LocationStatus
+import android.annotation.SuppressLint
+import android.os.Looper
+import com.google.android.gms.location.*
+import com.pulse.plannex.features.location.domain.entities.LocationObject
 import com.pulse.plannex.features.location.domain.repositories.LocationRepository
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.callbackFlow
 
-class LocationRepositoryImpl : LocationRepository {
+class LocationRepositoryImpl(
+    private val fusedLocationClient: FusedLocationProviderClient
+) : LocationRepository {
 
-    override fun getLocationUpdates(): Flow<LocationStatus> = flow {
-        // Simulamos el sensor de hardware GPS
-        var currentLat = -12.0463
-        var currentLng = -77.0310
-        
-        while (true) {
-            emit(LocationStatus(currentLat, currentLng))
-            delay(3000) // Actualizamos cada 3 segundos
-            // El usuario "se mueve" hacia el evento
-            currentLat += 0.0001
-            currentLng += 0.0001
+    @SuppressLint("MissingPermission")
+    override fun getLocationUpdates(): Flow<LocationObject> = callbackFlow {
+        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000)
+            .setMinUpdateIntervalMillis(2000)
+            .build()
+
+        val locationCallback = object : LocationCallback() {
+            override fun onLocationResult(result: LocationResult) {
+                result.lastLocation?.let { location ->
+                    trySend(LocationObject(location.latitude, location.longitude))
+                }
+            }
+        }
+
+        fusedLocationClient.requestLocationUpdates(
+            locationRequest,
+            locationCallback,
+            Looper.getMainLooper()
+        )
+
+        awaitClose {
+            fusedLocationClient.removeLocationUpdates(locationCallback)
         }
     }
 
-    override fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Float {
+    override fun getDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Float {
         val results = FloatArray(1)
-        Location.distanceBetween(lat1, lon1, lat2, lon2, results)
+        android.location.Location.distanceBetween(lat1, lon1, lat2, lon2, results)
         return results[0]
     }
 }

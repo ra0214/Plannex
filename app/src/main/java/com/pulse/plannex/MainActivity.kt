@@ -28,7 +28,7 @@ class MainActivity : FragmentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        appContainer = AppContainer()
+        appContainer = AppContainer(this)
         val objectsModule = ObjectsModule(appContainer)
         val locationModule = LocationModule(appContainer)
         val biometricAuthenticator = BiometricAuthenticatorImpl(this)
