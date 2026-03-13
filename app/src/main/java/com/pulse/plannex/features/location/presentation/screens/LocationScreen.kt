@@ -27,7 +27,6 @@ fun LocationScreen(
     viewModel: LocationViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
     
     val eventLocation = LatLng(eventLat, eventLng)
     val cameraPositionState = rememberCameraPositionState {
@@ -88,11 +87,12 @@ fun LocationScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 uiState.locationStatus?.let { status ->
-                    val distanceText = if (status.distanceToEvent != null) {
-                        if (status.distanceToEvent!! > 1000) {
-                            String.format(Locale.getDefault(), "%.2f km", status.distanceToEvent!! / 1000)
+                    val distance = status.distanceToEvent
+                    val distanceText = if (distance != null) {
+                        if (distance > 1000) {
+                            String.format(Locale.getDefault(), "%.2f km", distance / 1000)
                         } else {
-                            "${status.distanceToEvent!!.toInt()} metros"
+                            "${distance.toInt()} metros"
                         }
                     } else "Calculando..."
 

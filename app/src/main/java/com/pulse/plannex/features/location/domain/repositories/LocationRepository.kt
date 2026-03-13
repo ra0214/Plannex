@@ -6,4 +6,5 @@ import kotlinx.coroutines.flow.Flow
 interface LocationRepository {
     fun getLocationUpdates(): Flow<LocationObject>
     fun getDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Float
+    suspend fun getRouteDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Float
 }

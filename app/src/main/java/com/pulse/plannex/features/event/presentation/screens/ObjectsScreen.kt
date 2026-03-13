@@ -82,7 +82,7 @@ fun ObjectsScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -195,7 +195,7 @@ fun EventCard(evento: Evento, onEdit: () -> Unit, onDelete: () -> Unit, onViewLo
                     }
                 }
             }
-            
+
             if (evento.latitud != null && evento.longitud != null) {
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
                 Row(
