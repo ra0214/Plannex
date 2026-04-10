@@ -4,11 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pulse.plannex.core.network.EventApi
 import com.pulse.plannex.core.network.RegisterRequest
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class RegisterUiState(
     val isLoading: Boolean = false,
@@ -16,7 +18,10 @@ data class RegisterUiState(
     val error: String? = null
 )
 
-class RegisterViewModel(private val api: EventApi) : ViewModel() {
+@HiltViewModel
+class RegisterViewModel @Inject constructor(
+    private val api: EventApi
+) : ViewModel() {
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
 
@@ -25,11 +30,10 @@ class RegisterViewModel(private val api: EventApi) : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = api.register(RegisterRequest(userName, email, password))
-                // Suponiendo que una respuesta exitosa contiene un mensaje claro.
-                if (response.message.contains("registrado", ignoreCase = true)) {
+                if (response.message().contains("registrado", ignoreCase = true)) {
                     _uiState.update { it.copy(isLoading = false, isSuccess = true) }
                 } else {
-                    _uiState.update { it.copy(isLoading = false, error = response.message) }
+                    _uiState.update { it.copy(isLoading = false, error = response.message()) }
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = "Error de registro: ${e.localizedMessage}") }

@@ -1,11 +1,11 @@
-package com.pulse.plannex.features.accessControl.data
+package com.pulse.plannex.features.accessControl.data.repositories
 
 import android.content.Context
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
-import com.pulse.plannex.features.accessControl.domain.HapticFeedbackManager
+import com.pulse.plannex.features.accessControl.domain.repositories.HapticFeedbackManager
 
 class AndroidHapticFeedbackManager(context: Context) : HapticFeedbackManager {
     private val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

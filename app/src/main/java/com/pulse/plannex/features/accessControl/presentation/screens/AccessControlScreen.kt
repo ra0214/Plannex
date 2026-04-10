@@ -23,7 +23,10 @@ import com.pulse.plannex.features.accessControl.presentation.components.QrScanne
 import com.pulse.plannex.features.accessControl.presentation.viewmodel.AccessControlViewModel
 
 @Composable
-fun AccessControlScreen(viewModel: AccessControlViewModel) {
+fun AccessControlScreen(
+    viewModel: AccessControlViewModel,
+    onEventRegistered: () -> Unit = {}
+) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     var hasCameraPermission by remember {
@@ -45,6 +48,13 @@ fun AccessControlScreen(viewModel: AccessControlViewModel) {
     LaunchedEffect(key1 = true) {
         if (!hasCameraPermission) {
             launcher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
+    // Trigger update when success state is reached
+    LaunchedEffect(uiState.isValid) {
+        if (uiState.isValid == true) {
+            onEventRegistered()
         }
     }
 

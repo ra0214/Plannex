@@ -3,8 +3,11 @@ package com.pulse.plannex.features.location.domain.usecases
 import com.pulse.plannex.features.location.domain.entities.LocationObject
 import com.pulse.plannex.features.location.domain.repositories.LocationRepository
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
-class GetLocationUseCase(private val repository: LocationRepository) {
+class GetLocationUseCase @Inject constructor(
+    private val repository: LocationRepository
+) {
     
     operator fun invoke(): Flow<LocationObject> = repository.getLocationUpdates()
     

@@ -1,8 +1,8 @@
 package com.pulse.plannex.features.accessControl.presentation.components
 
-import android.util.Size
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
@@ -14,7 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import com.pulse.plannex.features.accessControl.data.MLKitQrScanner
+import com.pulse.plannex.features.accessControl.data.datasource.MLKitQrScanner
 
 @Composable
 fun QrScannerView(
@@ -39,10 +39,12 @@ fun QrScannerView(
                 val imageAnalysis = ImageAnalysis.Builder()
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .build()
-                    .also {
-                        it.setAnalyzer(executor, scanner.createAnalyzer { code ->
-                            onQrCodeScanned(code)
-                        })
+                    .also { analysis ->
+                        analysis.setAnalyzer(executor) { imageProxy: ImageProxy ->
+                            scanner.createAnalyzer { code ->
+                                onQrCodeScanned(code)
+                            }.analyze(imageProxy)
+                        }
                     }
 
                 val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA

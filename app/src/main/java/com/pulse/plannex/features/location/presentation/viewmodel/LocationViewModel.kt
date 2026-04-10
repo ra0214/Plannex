@@ -4,12 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pulse.plannex.features.location.domain.usecases.GetLocationUseCase
 import com.pulse.plannex.features.location.presentation.screens.LocationUiState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class LocationViewModel(
+@HiltViewModel
+class LocationViewModel @Inject constructor(
     private val getLocationUseCase: GetLocationUseCase
 ) : ViewModel() {
 
