@@ -1,7 +1,11 @@
 package com.pulse.plannex
 
 import android.os.Bundle
+import android.Manifest
+import android.os.Build
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
@@ -26,6 +30,7 @@ import com.pulse.plannex.features.event.presentation.screens.ObjectsScreen
 import com.pulse.plannex.features.event.presentation.viewmodel.ObjectsViewModel
 import com.pulse.plannex.features.location.presentation.screens.LocationScreen
 import com.pulse.plannex.features.location.presentation.viewmodel.LocationViewModel
+import com.pulse.plannex.features.notification.presentation.viewmodel.FCMViewModel
 import com.pulse.plannex.ui.theme.PlannexTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -43,16 +48,38 @@ class MainActivity : FragmentActivity() {
                 var selectedTab by rememberSaveable { mutableIntStateOf(0) }
 
                 val objectsViewModel: ObjectsViewModel = hiltViewModel()
+                val fcmViewModel: FCMViewModel = hiltViewModel()
+
+                // Solicitar permisos de notificación en Android 13+
+                val launcher = rememberLauncherForActivityResult(
+                    ActivityResultContracts.RequestPermission()
+                ) { isGranted -> }
+
+                LaunchedEffect(Unit) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                }
 
                 if (currentScreen == "login" || currentScreen == "registro") {
                     when (currentScreen) {
                         "login" -> {
                             val loginViewModel: LoginViewModel = hiltViewModel()
+                            val loginState by loginViewModel.uiState.collectAsState()
+
+                            // Registro automático del token FCM al detectar login exitoso
+                            LaunchedEffect(loginState.isSuccess) {
+                                if (loginState.isSuccess && loginState.userId != null) {
+                                    fcmViewModel.registerToken(loginState.userId!!)
+                                    currentScreen = "main_content"
+                                }
+                            }
+
                             LoginScreen(
                                 viewModel = loginViewModel,
                                 activity = this,
                                 onLoginSuccess = {
-                                    currentScreen = "main_content"
+                                    // El LaunchedEffect manejará el flujo
                                 },
                                 onNavigateToRegister = {
                                     currentScreen = "registro"

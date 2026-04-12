@@ -25,8 +25,16 @@ data class EventosResponse(
 )
 
 data class LoginRequest(val userName: String, val password: String)
-data class LoginResponse(val status: String, val message: String?, val token: String? = null)
+data class LoginResponse(val status: String, val message: String?, val token: String? = null, val userId: Int? = null)
 data class RegisterRequest(val userName: String, val email: String, val password: String)
+
+data class FcmTokenRequest(
+    @SerializedName("token") val token: String
+)
+
+data class InviteRequest(
+    @SerializedName("user_id") val userId: Int
+)
 
 interface EventApi {
     @Headers("Content-Type: application/json", "Accept: application/json")
@@ -51,4 +59,13 @@ interface EventApi {
 
     @DELETE("eventos/{id}")
     suspend fun deleteEvento(@Path("id") id: Int): Response<ResponseBody>
+
+    @POST("users/{userId}/fcm-token")
+    suspend fun registerFcmToken(@Path("userId") userId: Int, @Body request: FcmTokenRequest): Response<ResponseBody>
+
+    @DELETE("users/{userId}/fcm-token")
+    suspend fun deleteFcmToken(@Path("userId") userId: Int): Response<ResponseBody>
+
+    @POST("eventos/{eventoId}/invitar")
+    suspend fun inviteUser(@Path("eventoId") eventoId: Int, @Body request: InviteRequest): Response<ResponseBody>
 }
