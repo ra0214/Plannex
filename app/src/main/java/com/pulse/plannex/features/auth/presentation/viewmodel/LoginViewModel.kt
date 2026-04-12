@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.pulse.plannex.core.network.EventApi
 import com.pulse.plannex.core.network.LoginRequest
 import com.pulse.plannex.features.auth.domain.BiometricAuthenticator
+import com.pulse.plannex.features.notification.presentation.viewmodel.FCMViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,6 +18,7 @@ import javax.inject.Inject
 data class LoginUiState(
     val isLoading: Boolean = false,
     val isSuccess: Boolean = false,
+    val userId: Int? = null,
     val error: String? = null,
     val isBiometricAvailable: Boolean = false
 )
@@ -42,7 +44,11 @@ class LoginViewModel @Inject constructor(
                                       loginBody?.token != null
 
                     if (isSuccessful) {
-                        _uiState.update { it.copy(isLoading = false, isSuccess = true) }
+                        _uiState.update { it.copy(
+                            isLoading = false, 
+                            isSuccess = true,
+                            userId = loginBody?.userId // Guardamos el userId
+                        ) }
                     } else {
                         _uiState.update { it.copy(isLoading = false, error = loginBody?.message ?: "Credenciales incorrectas") }
                     }
