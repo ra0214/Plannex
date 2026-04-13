@@ -1,5 +1,6 @@
 package com.pulse.plannex.features.notification.presentation.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.messaging.FirebaseMessaging
@@ -23,10 +24,14 @@ class FCMViewModel @Inject constructor(
         firebaseMessaging.token.addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 val token = task.result
+                // ESTA LÍNEA ES PARA LA PRUEBA:
+                Log.d("FCM_TOKEN", "Token de mi dispositivo: $token")
+                
                 viewModelScope.launch {
                     _registrationState.value = registroTokenUseCase(userId, token)
                 }
             } else {
+                Log.e("FCM_TOKEN", "Error al obtener el token", task.exception)
                 _registrationState.value = Result.failure(task.exception ?: Exception("FCM token retrieval failed"))
             }
         }

@@ -4,8 +4,9 @@ import com.google.gson.Gson
 import com.pulse.plannex.core.network.EventApi
 import com.pulse.plannex.core.network.EventoDto
 import com.pulse.plannex.features.accessControl.domain.repositories.AccessControlRepository
+import javax.inject.Inject
 
-class AccessControlRepositoryImpl(private val api: EventApi) : AccessControlRepository {
+class AccessControlRepositoryImpl @Inject constructor(private val api: EventApi) : AccessControlRepository {
     private val gson = Gson()
 
     override suspend fun registerEventFromQr(qrContent: String): Result<Boolean> {

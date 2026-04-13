@@ -37,25 +37,20 @@ class ObjectsRepositoryImlp @Inject constructor(
         return try {
             val response = api.getEventos()
             if (response.isSuccessful) {
-                // Ajuste crítico: Accedemos a .eventos del objeto de respuesta
                 val remoteEvents = response.body()?.eventos ?: emptyList()
                 val allEventsDomain = remoteEvents.map { it.toDomain() }
-                
                 val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
                 val currentDate = sdf.format(Date())
-                
                 val top3Upcoming = allEventsDomain
                     .filter { it.fecha >= currentDate }
                     .sortedBy { it.fecha }
                     .take(3)
                     .map { it.toEntity() }
-
                 eventDao.clearAllEvents()
                 eventDao.insertEvents(top3Upcoming)
-                
                 Result.success(allEventsDomain)
             } else {
-                Result.failure(Exception("Error servidor: ${response.code()}"))
+                Result.failure(Exception("Error servidor"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -64,14 +59,7 @@ class ObjectsRepositoryImlp @Inject constructor(
 
     override suspend fun createEvento(nombre: String, fecha: String, latitud: Double?, longitud: Double?): Result<Evento> {
         return try {
-            val dto = EventoDto(
-                title = nombre, 
-                date = fecha, 
-                latitude = latitud, 
-                longitude = longitud, 
-                qrCodeData = "QR-${System.currentTimeMillis()}", 
-                createdBy = 1
-            )
+            val dto = EventoDto(title = nombre, date = fecha, latitude = latitud, longitude = longitud, qrCodeData = "QR-${System.currentTimeMillis()}", createdBy = 1)
             val response = api.createEvento(dto)
             if (response.isSuccessful) {
                 refreshEventos()

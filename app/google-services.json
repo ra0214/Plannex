@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "216111459675",
+    "project_id": "plannex-b495e",
+    "storage_bucket": "plannex-b495e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:216111459675:android:3264e6f0ce3d492b977e7e",
+        "android_client_info": {
+          "package_name": "com.pulse.plannex"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBPUaDj_L0RucIciGBf4bdBOWI4dQTzsfI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

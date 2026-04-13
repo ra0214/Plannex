@@ -3,6 +3,7 @@ package com.pulse.plannex
 import android.os.Bundle
 import android.Manifest
 import android.os.Build
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -19,11 +20,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.firebase.messaging.FirebaseMessaging
 import com.pulse.plannex.features.accessControl.presentation.screens.AccessControlScreen
 import com.pulse.plannex.features.accessControl.presentation.viewmodel.AccessControlViewModel
 import com.pulse.plannex.features.auth.presentation.screens.LoginScreen
-import com.pulse.plannex.features.auth.presentation.screens.RegisterScreen
 import com.pulse.plannex.features.auth.presentation.viewmodel.LoginViewModel
+import com.pulse.plannex.features.auth.presentation.screens.RegisterScreen
 import com.pulse.plannex.features.auth.presentation.viewmodel.RegisterViewModel
 import com.pulse.plannex.features.event.domain.entities.Evento
 import com.pulse.plannex.features.event.presentation.screens.ObjectsScreen
@@ -41,6 +43,13 @@ class MainActivity : FragmentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        // FORZAR TOKEN PARA LA PRUEBA DE FIREBASE
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                Log.d("FCM_TOKEN", "TU_TOKEN_ES: ${task.result}")
+            }
+        }
+
         setContent {
             PlannexTheme {
                 var currentScreen by rememberSaveable { mutableStateOf("login") }
@@ -50,10 +59,9 @@ class MainActivity : FragmentActivity() {
                 val objectsViewModel: ObjectsViewModel = hiltViewModel()
                 val fcmViewModel: FCMViewModel = hiltViewModel()
 
-                // Solicitar permisos de notificación en Android 13+
                 val launcher = rememberLauncherForActivityResult(
                     ActivityResultContracts.RequestPermission()
-                ) { isGranted -> }
+                ) { _ -> }
 
                 LaunchedEffect(Unit) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -67,10 +75,11 @@ class MainActivity : FragmentActivity() {
                             val loginViewModel: LoginViewModel = hiltViewModel()
                             val loginState by loginViewModel.uiState.collectAsState()
 
-                            // Registro automático del token FCM al detectar login exitoso
                             LaunchedEffect(loginState.isSuccess) {
-                                if (loginState.isSuccess && loginState.userId != null) {
-                                    fcmViewModel.registerToken(loginState.userId!!)
+                                if (loginState.isSuccess) {
+                                    loginState.userId?.let { id ->
+                                        fcmViewModel.registerToken(id)
+                                    }
                                     currentScreen = "main_content"
                                 }
                             }
@@ -78,9 +87,7 @@ class MainActivity : FragmentActivity() {
                             LoginScreen(
                                 viewModel = loginViewModel,
                                 activity = this,
-                                onLoginSuccess = {
-                                    // El LaunchedEffect manejará el flujo
-                                },
+                                onLoginSuccess = {},
                                 onNavigateToRegister = {
                                     currentScreen = "registro"
                                 }
