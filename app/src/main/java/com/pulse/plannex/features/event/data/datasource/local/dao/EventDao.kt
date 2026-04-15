@@ -9,7 +9,6 @@ interface EventDao {
     @Query("SELECT * FROM events ORDER BY date ASC")
     fun getAllEvents(): Flow<List<EventEntity>>
 
-    // Obtener los 3 eventos más próximos a partir de una fecha
     @Query("SELECT * FROM events WHERE date >= :currentDate ORDER BY date ASC LIMIT 3")
     fun getUpcomingEvents(currentDate: String): Flow<List<EventEntity>>
 

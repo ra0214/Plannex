@@ -35,8 +35,6 @@ class PlannexMessagingService : FirebaseMessagingService() {
         super.onNewToken(token)
         scope.launch {
             fcmTokenRepository.saveToken(token)
-            // If user is logged in, you might want to register it here too.
-            // But usually, we do it at login or when the app starts.
         }
     }
 

@@ -24,7 +24,6 @@ class FCMViewModel @Inject constructor(
         firebaseMessaging.token.addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 val token = task.result
-                // ESTA LÍNEA ES PARA LA PRUEBA:
                 Log.d("FCM_TOKEN", "Token de mi dispositivo: $token")
                 
                 viewModelScope.launch {

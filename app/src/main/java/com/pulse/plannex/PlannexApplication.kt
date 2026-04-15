@@ -29,8 +29,6 @@ class PlannexApplication : Application(), Configuration.Provider {
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
-        // Programamos que se intente cada 30 minutos. 
-        // El SyncWorker tiene la lógica interna para ignorar las horas fuera de 00:00 - 05:00.
         val syncRequest = PeriodicWorkRequestBuilder<SyncWorker>(30, TimeUnit.MINUTES)
             .setConstraints(constraints)
             .setBackoffCriteria(
