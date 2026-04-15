@@ -36,6 +36,16 @@ data class InviteRequest(
     @SerializedName("user_id") val userId: Int
 )
 
+data class UserDto(
+    @SerializedName("id") val id: Int,
+    @SerializedName("userName") val userName: String,
+    @SerializedName("email") val email: String? = null
+)
+
+data class UsersResponse(
+    @SerializedName("users") val users: List<UserDto>? = null
+)
+
 interface EventApi {
     @Headers("Content-Type: application/json", "Accept: application/json")
     @POST("login")
@@ -68,4 +78,7 @@ interface EventApi {
 
     @POST("eventos/{eventoId}/invitar")
     suspend fun inviteUser(@Path("eventoId") eventoId: Int, @Body request: InviteRequest): Response<ResponseBody>
+
+    @GET("users")
+    suspend fun getUsers(): Response<UsersResponse>
 }

@@ -8,10 +8,10 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,15 +23,21 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.pulse.plannex.features.event.domain.entities.Evento
 import com.pulse.plannex.features.event.presentation.components.BackupDialog
 import com.pulse.plannex.features.event.presentation.viewmodel.ObjectsViewModel
+import com.pulse.plannex.features.notification.presentation.components.UserInvitationDialog
+import com.pulse.plannex.features.notification.presentation.viewmodel.InvitationViewModel
 import java.util.UUID
 
 @Composable
 fun ObjectsScreen(
     viewModel: ObjectsViewModel = hiltViewModel(),
+    invitationViewModel: InvitationViewModel = hiltViewModel(),
     onNavigateToLocation: (Evento) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val invitationUiState by invitationViewModel.uiState.collectAsState()
     val displayList = if (uiState.eventos.isNotEmpty()) uiState.eventos else uiState.upcomingEventos
+
+    var showInviteDialogByEventId by remember { mutableStateOf<Int?>(null) }
 
     if (uiState.showBackupDialog) {
         BackupDialog(
@@ -40,103 +46,136 @@ fun ObjectsScreen(
         )
     }
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        item {
-            val formTitle = if (uiState.editingEventId == null) "Crear Nuevo Evento" else "Editando Evento"
-            Text(formTitle, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(16.dp))
-
-            OutlinedTextField(
-                value = uiState.eventName,
-                onValueChange = { viewModel.onEventNameChanged(it) },
-                label = { Text("Nombre del Evento") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = uiState.eventDate,
-                onValueChange = { viewModel.onEventDateChanged(it) },
-                label = { Text("Fecha (YYYY-MM-DD HH:MM:SS)") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Row(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    value = uiState.eventLat,
-                    onValueChange = { viewModel.onEventLocationChanged(it, uiState.eventLng) },
-                    label = { Text("Latitud") },
-                    modifier = Modifier.weight(1f),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                OutlinedTextField(
-                    value = uiState.eventLng,
-                    onValueChange = { viewModel.onEventLocationChanged(uiState.eventLat, it) },
-                    label = { Text("Longitud") },
-                    modifier = Modifier.weight(1f),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Button(
-                    onClick = { viewModel.submitEvento() },
-                    modifier = Modifier.weight(1f).height(48.dp),
-                    enabled = !uiState.isLoading
-                ) {
-                    val buttonText = if (uiState.editingEventId == null) "Publicar Evento" else "Guardar Cambios"
-                    Text(buttonText)
+    if (showInviteDialogByEventId != null) {
+        UserInvitationDialog(
+            users = invitationUiState.users,
+            isLoading = invitationUiState.isLoading,
+            onInvite = { userId ->
+                showInviteDialogByEventId?.let { eventId ->
+                    invitationViewModel.inviteUser(eventId, userId)
                 }
-                AnimatedVisibility(visible = uiState.editingEventId != null) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    TextButton(onClick = { viewModel.cancelEdit() }) {
-                        Text("Cancelar")
-                    }
-                }
+            },
+            onDismiss = { 
+                showInviteDialogByEventId = null
+                invitationViewModel.resetState()
             }
+        )
+    }
 
-            if (uiState.upcomingEventos.isNotEmpty() && uiState.eventos.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(24.dp))
-                Text("¡Próximamente!", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.fillMaxWidth())
-                Spacer(modifier = Modifier.height(8.dp))
-                LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(uiState.upcomingEventos) { evento ->
-                        UpcomingEventCard(evento) { onNavigateToLocation(evento) }
-                    }
-                }
-            }
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = 24.dp))
-
-            val listTitle = if (uiState.eventos.isEmpty() && uiState.upcomingEventos.isNotEmpty()) "Eventos Guardados (Modo Offline)" else "Mis Eventos"
-            Text(listTitle, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, modifier = Modifier.fillMaxWidth())
-            Spacer(modifier = Modifier.height(8.dp))
+    // Mostrar Snackbar si la invitación fue exitosa o fallida
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(invitationUiState.invitationResult) {
+        invitationUiState.invitationResult?.onSuccess {
+            snackbarHostState.showSnackbar("Invitación enviada con éxito")
+            invitationViewModel.resetState()
+        }?.onFailure {
+            snackbarHostState.showSnackbar("Error al enviar la invitación")
+            invitationViewModel.resetState()
         }
+    }
 
-        if (uiState.isLoading && displayList.isEmpty()) {
-            item { Box(modifier = Modifier.fillParentMaxSize().padding(top=32.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() } }
-        } else if (uiState.error != null && displayList.isEmpty()) {
-            item { Text(uiState.error!!, color = MaterialTheme.colorScheme.error) }
-        } else if (displayList.isEmpty() && !uiState.isLoading) {
-            item { Box(modifier = Modifier.fillParentMaxSize().padding(top = 32.dp), contentAlignment = Alignment.Center) { Text("Aún no tienes eventos. ¡Crea el primero!") } }
-        } else {
-            items(displayList, key = { it.id ?: UUID.randomUUID() }) { evento ->
-                EventCard(
-                    evento = evento,
-                    onEdit = { viewModel.startEdit(evento) },
-                    onDelete = { evento.id?.let { nonNullId -> viewModel.deleteEvento(nonNullId) } },
-                    onViewLocation = { onNavigateToLocation(evento) }
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(padding),
+            contentPadding = PaddingValues(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            item {
+                val formTitle = if (uiState.editingEventId == null) "Crear Nuevo Evento" else "Editando Evento"
+                Text(formTitle, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = uiState.eventName,
+                    onValueChange = { viewModel.onEventNameChanged(it) },
+                    label = { Text("Nombre del Evento") },
+                    modifier = Modifier.fillMaxWidth()
                 )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = uiState.eventDate,
+                    onValueChange = { viewModel.onEventDateChanged(it) },
+                    label = { Text("Fecha (YYYY-MM-DD HH:MM:SS)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = uiState.eventLat,
+                        onValueChange = { viewModel.onEventLocationChanged(it, uiState.eventLng) },
+                        label = { Text("Latitud") },
+                        modifier = Modifier.weight(1f),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    OutlinedTextField(
+                        value = uiState.eventLng,
+                        onValueChange = { viewModel.onEventLocationChanged(uiState.eventLat, it) },
+                        label = { Text("Longitud") },
+                        modifier = Modifier.weight(1f),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Button(
+                        onClick = { viewModel.submitEvento() },
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        enabled = !uiState.isLoading
+                    ) {
+                        val buttonText = if (uiState.editingEventId == null) "Publicar Evento" else "Guardar Cambios"
+                        Text(buttonText)
+                    }
+                    AnimatedVisibility(visible = uiState.editingEventId != null) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        TextButton(onClick = { viewModel.cancelEdit() }) {
+                            Text("Cancelar")
+                        }
+                    }
+                }
+
+                if (uiState.upcomingEventos.isNotEmpty() && uiState.eventos.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text("¡Próximamente!", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.fillMaxWidth())
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(uiState.upcomingEventos) { evento ->
+                            UpcomingEventCard(evento) { onNavigateToLocation(evento) }
+                        }
+                    }
+                }
+
+                HorizontalDivider(modifier = Modifier.padding(vertical = 24.dp))
+
+                val listTitle = if (uiState.eventos.isEmpty() && uiState.upcomingEventos.isNotEmpty()) "Eventos Guardados (Modo Offline)" else "Mis Eventos"
+                Text(listTitle, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            if (uiState.isLoading && displayList.isEmpty()) {
+                item { Box(modifier = Modifier.fillParentMaxSize().padding(top=32.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() } }
+            } else if (uiState.error != null && displayList.isEmpty()) {
+                item { Text(uiState.error!!, color = MaterialTheme.colorScheme.error) }
+            } else if (displayList.isEmpty() && !uiState.isLoading) {
+                item { Box(modifier = Modifier.fillParentMaxSize().padding(top = 32.dp), contentAlignment = Alignment.Center) { Text("Aún no tienes eventos. ¡Crea el primero!") } }
+            } else {
+                items(displayList, key = { it.id ?: UUID.randomUUID() }) { evento ->
+                    EventCard(
+                        evento = evento,
+                        onEdit = { viewModel.startEdit(evento) },
+                        onDelete = { evento.id?.let { nonNullId -> viewModel.deleteEvento(nonNullId) } },
+                        onViewLocation = { onNavigateToLocation(evento) },
+                        onInviteClick = { evento.id?.let { id -> showInviteDialogByEventId = id } }
+                    )
+                }
             }
         }
     }
@@ -157,7 +196,13 @@ fun UpcomingEventCard(evento: Evento, onClick: () -> Unit) {
 }
 
 @Composable
-fun EventCard(evento: Evento, onEdit: () -> Unit, onDelete: () -> Unit, onViewLocation: () -> Unit) {
+fun EventCard(
+    evento: Evento,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    onViewLocation: () -> Unit,
+    onInviteClick: () -> Unit
+) {
     val dateParts = evento.fecha.split(" ").getOrNull(0)?.split("-")
     val timePart = evento.fecha.split(" ").getOrNull(1)?.substring(0, 5)
 
@@ -190,6 +235,9 @@ fun EventCard(evento: Evento, onEdit: () -> Unit, onDelete: () -> Unit, onViewLo
                     }
                 }
                 Column(horizontalAlignment = Alignment.End, modifier = Modifier.padding(end = 8.dp)) {
+                    IconButton(onClick = onInviteClick) {
+                        Icon(Icons.Default.PersonAdd, contentDescription = "Invitar", tint = MaterialTheme.colorScheme.primary)
+                    }
                     TextButton(onClick = onEdit) { Text("Editar") }
                     TextButton(onClick = onDelete) { Text("Eliminar", color = MaterialTheme.colorScheme.error) }
                 }
