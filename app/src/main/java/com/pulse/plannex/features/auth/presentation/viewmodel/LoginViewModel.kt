@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.pulse.plannex.core.network.EventApi
 import com.pulse.plannex.core.network.LoginRequest
 import com.pulse.plannex.features.auth.domain.BiometricAuthenticator
-import com.pulse.plannex.features.notification.presentation.viewmodel.FCMViewModel
+import com.pulse.plannex.features.auth.domain.repositories.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,6 +26,7 @@ data class LoginUiState(
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val api: EventApi,
+    private val authRepository: AuthRepository,
     private val biometricAuthenticator: BiometricAuthenticator
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState(isBiometricAvailable = biometricAuthenticator.isBiometricAvailable()))
@@ -39,15 +40,26 @@ class LoginViewModel @Inject constructor(
                 
                 if (response.isSuccessful) {
                     val loginBody = response.body()
+                    
+                    // Verificamos si la respuesta indica éxito según los criterios del backend
                     val isSuccessful = loginBody?.status?.equals("success", ignoreCase = true) == true || 
                                       loginBody?.message?.contains("exitoso", ignoreCase = true) == true ||
                                       loginBody?.token != null
 
                     if (isSuccessful) {
+                        // IMPORTANTE: Guardamos el token y el userId en el almacenamiento local
+                        loginBody?.token?.let { token ->
+                            authRepository.saveToken(token)
+                        }
+                        
+                        loginBody?.userId?.let { userId ->
+                            authRepository.saveUserId(userId)
+                        }
+                        
                         _uiState.update { it.copy(
                             isLoading = false, 
                             isSuccess = true,
-                            userId = loginBody?.userId // Guardamos el userId
+                            userId = loginBody?.userId
                         ) }
                     } else {
                         _uiState.update { it.copy(isLoading = false, error = loginBody?.message ?: "Credenciales incorrectas") }
@@ -57,7 +69,7 @@ class LoginViewModel @Inject constructor(
                     _uiState.update { it.copy(isLoading = false, error = "Error ${response.code()}: $errorBody") }
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = "Error de conexión") }
+                _uiState.update { it.copy(isLoading = false, error = "Error de conexión: ${e.message}") }
             }
         }
     }

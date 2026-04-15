@@ -2,6 +2,7 @@ package com.pulse.plannex.features.event.data.repositories
 
 import com.pulse.plannex.core.network.EventApi
 import com.pulse.plannex.core.network.EventoDto
+import com.pulse.plannex.features.auth.domain.repositories.AuthRepository
 import com.pulse.plannex.features.event.data.datasource.local.dao.EventDao
 import com.pulse.plannex.features.event.data.datasource.local.mapper.toDomain
 import com.pulse.plannex.features.event.data.datasource.local.mapper.toEntity
@@ -9,6 +10,7 @@ import com.pulse.plannex.features.event.data.datasource.remote.mapper.toDomain
 import com.pulse.plannex.features.event.domain.entities.Evento
 import com.pulse.plannex.features.event.domain.repositories.ObjectRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.text.SimpleDateFormat
 import java.util.*
@@ -16,7 +18,8 @@ import javax.inject.Inject
 
 class ObjectsRepositoryImlp @Inject constructor(
     private val api: EventApi,
-    private val eventDao: EventDao
+    private val eventDao: EventDao,
+    private val authRepository: AuthRepository
 ) : ObjectRepository {
 
     override fun getEventosFlow(): Flow<List<Evento>> {
@@ -50,7 +53,7 @@ class ObjectsRepositoryImlp @Inject constructor(
                 eventDao.insertEvents(top3Upcoming)
                 Result.success(allEventsDomain)
             } else {
-                Result.failure(Exception("Error servidor"))
+                Result.failure(Exception("Error servidor: ${response.code()}"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -59,13 +62,25 @@ class ObjectsRepositoryImlp @Inject constructor(
 
     override suspend fun createEvento(nombre: String, fecha: String, latitud: Double?, longitud: Double?): Result<Evento> {
         return try {
-            val dto = EventoDto(title = nombre, date = fecha, latitude = latitud, longitude = longitud, qrCodeData = "QR-${System.currentTimeMillis()}", createdBy = 1)
+            // Obtenemos el ID real del usuario logueado
+            val currentUserId = authRepository.getUserId().first()
+            
+            val dto = EventoDto(
+                title = nombre, 
+                date = fecha, 
+                latitude = latitud, 
+                longitude = longitud, 
+                qrCodeData = "QR-${System.currentTimeMillis()}", 
+                createdBy = currentUserId
+            )
+            
             val response = api.createEvento(dto)
             if (response.isSuccessful) {
                 refreshEventos()
                 Result.success(Evento(id = -1, nombre = nombre, fecha = fecha, latitud = latitud, longitud = longitud))
             } else {
-                Result.failure(Exception("Error al crear"))
+                val errorMsg = response.errorBody()?.string() ?: "Error al crear"
+                Result.failure(Exception(errorMsg))
             }
         } catch (e: Exception) {
             Result.failure(e)

@@ -2,6 +2,8 @@ package com.pulse.plannex.core.di
 
 import com.pulse.plannex.features.accessControl.data.repositories.AccessControlRepositoryImpl
 import com.pulse.plannex.features.accessControl.domain.repositories.AccessControlRepository
+import com.pulse.plannex.features.auth.data.repositories.AuthRepositoryImpl
+import com.pulse.plannex.features.auth.domain.repositories.AuthRepository
 import com.pulse.plannex.features.event.data.repositories.ObjectsRepositoryImlp
 import com.pulse.plannex.features.event.data.repositories.SyncPrefsRepositoryImpl
 import com.pulse.plannex.features.event.domain.repositories.ObjectRepository
@@ -21,6 +23,12 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
+
+    @Binds
+    @Singleton
+    abstract fun bindAuthRepository(
+        impl: AuthRepositoryImpl
+    ): AuthRepository
 
     @Binds
     @Singleton
